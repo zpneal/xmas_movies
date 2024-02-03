@@ -6,7 +6,8 @@ library(igraph)
 B <- as.matrix(read.csv("xmas_movies.csv", row.names = 1, header = TRUE))
 
 #Extract signed backbone
-trope <- fdsm(t(B), trials = 50000, alpha = 0.2, class = "igraph", narrative = TRUE, signed = TRUE)
+#trope <- fdsm(t(B), trials = 50000, alpha = 0.2, class = "igraph", narrative = TRUE, signed = TRUE)
+trope <- fdsm(t(B), trials = 50000, alpha = 0.1, class = "igraph")
 trope <- delete.vertices(trope, which(degree(trope)==0))  #Remove isolates
 
 #Layout

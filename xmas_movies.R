@@ -1,24 +1,16 @@
 #Load packages
+devtools::install_github("zpneal/backbone", ref = "v3", build_vignettes = TRUE)  #Install latest version of backbone
 library(backbone)
 library(igraph)
 
-#Import data
+#Import data as an incidence/biadjacency matrix
 B <- as.matrix(read.csv("xmas_movies.csv", row.names = 1, header = TRUE))
+B <- t(B)  #Transpose to focus on tropes (omit this to focus on movies, although the network doesn't look as nice)
 
-#Extract signed backbone
-#trope <- fdsm(t(B), trials = 50000, alpha = 0.2, class = "igraph", narrative = TRUE, signed = TRUE)
-trope <- fdsm(t(B), trials = 50000, alpha = 0.1, class = "igraph")
-trope <- delete.vertices(trope, which(degree(trope)==0))  #Remove isolates
-
-#Layout
-positive <- delete_edges(trope, which(E(trope)$weight==-1))
-layout <- layout_with_kk(positive)
-
-#Color
-E(trope)$edgecolor <- rgb(0,.53,.24,.75)
-E(trope)$edgecolor[which(E(trope)$weight==-1)] <- rgb(.77,.26,.27,.25)
-E(trope)$edgewidth <- 3
-E(trope)$edgewidth[which(E(trope)$weight==-1)] <- 1
+#Extract backbone
+trope <- backbone_from_bipartite(B, alpha = 0.1, model = "fdsm")
+trope <- graph_from_adjacency_matrix(trope, mode = "undirected")
+trope <- delete_vertices(trope, which(degree(trope)==0))  #Remove isolates
 
 #Make the labels look nice
 V(trope)$name <- stringr::str_replace_all(V(trope)$name, "\\ ", "\n")
@@ -39,9 +31,10 @@ V(trope)$name <- stringr::str_replace_all(V(trope)$name, "is\n", " is ")
 V(trope)$name <- stringr::str_replace_all(V(trope)$name, " belief", "\nbelief")
 
 #Plot
-pdf("trope.pdf")
-plot(trope, layout = layout, 
-     vertex.label.cex = .5, vertex.label.color = "black", vertex.label.font = 2, vertex.label.family = "sans", 
-     vertex.frame.color = NA, vertex.size = 20, vertex.color = rgb(.83,.68,.21,.5),
-     edge.color = E(trope)$edgecolor, edge.width = E(trope)$edgewidth)
+par(mar = c(0, 0, 0, 0))
+pdf("trope.pdf", height = 20, width = 20)
+plot(trope, layout = layout_with_kk(trope),
+     vertex.label.cex = 1.6, vertex.label.color = "black", vertex.label.font = 2, vertex.label.family = "sans", 
+     vertex.frame.color = NA, vertex.size = 20, vertex.color = rgb(.84,0,.11,.5),
+     edge.color = rgb(0,.53,.24,.75), edge.width = 10)
 dev.off()
